@@ -1,0 +1,44 @@
+{
+  "name": "keyring",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Local, Windows-locked secrets vault with numbered drawers, built to be used safely by AI agents. / Cofre local de segredos, trancado pelo Windows, com gavetas numeradas, pensado para agentes de IA.",
+  "bin": {
+    "keyring": "src/cli.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.ts\"",
+    "tipos": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "secrets",
+    "vault",
+    "credentials",
+    "cli",
+    "windows",
+    "dpapi",
+    "ai-agents",
+    "env",
+    "password-manager"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leonelferreira0373/keyring.git"
+  },
+  "homepage": "https://github.com/leonelferreira0373/keyring#readme",
+  "bugs": {
+    "url": "https://github.com/leonelferreira0373/keyring/issues"
+  },
+  "os": [
+    "win32"
+  ],
+  "author": "Leonel Ferreira"
+}

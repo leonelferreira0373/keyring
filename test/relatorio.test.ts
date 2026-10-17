@@ -1,0 +1,30 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { novaChave } from "../src/cripto.ts";
+import { Gavetas } from "../src/gavetas.ts";
+import { relatorioTexto } from "../src/relatorio.ts";
+import { TrancaDeTeste } from "../src/tranca.ts";
+
+test("o relatório tem a ficha, os itens, os valores em claro e o aviso; os ficheiros só em linha", () => {
+  const raiz = mkdtempSync(join(tmpdir(), "keyring-rel-"));
+  const g = Gavetas.abrir(raiz, new TrancaDeTeste(novaChave())).criar("acme", "Acme Corp", "Empresa de tecnologia.");
+  g.guardarItem({ nome: "cf.token", tipo: "valor", conteudo: Buffer.from("VALOR-xyz-123456"), env: "CF_TOKEN", nota: "conta dev", estado: "rodar" });
+  g.guardarItem({ nome: "como.fazer", tipo: "nota", conteudo: Buffer.from("passo 1\npasso 2") });
+  g.guardarItem({ nome: "chave", tipo: "ficheiro", conteudo: Buffer.from("-----BEGIN-----"), nomeOriginal: "chave.pem" });
+  const t = relatorioTexto(g, "2026-10-16 14:20");
+  assert.match(t, /KEYRING — gaveta 1: acme/);
+  assert.match(t, /Entidade: Acme Corp/);
+  assert.match(t, /AVISO: este ficheiro tem segredos em texto simples/);
+  assert.match(t, /Empresa de tecnologia\./);
+  assert.match(t, /cf\.token {2}\[valor, rodar\]/);
+  assert.match(t, /variável: CF_TOKEN/);
+  assert.match(t, /valor: VALOR-xyz-123456/);
+  assert.match(t, / {4}passo 1\n {4}passo 2/);
+  assert.match(t, /ficheiro: chave\.pem \(15 bytes\)/);
+  assert.ok(!t.includes("BEGIN"), "o conteúdo de um ficheiro não vai para o relatório");
+  assert.match(t, /keyring sudo 1 tirar chave/);
+  rmSync(raiz, { recursive: true, force: true });
+});

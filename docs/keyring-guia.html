@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8" />
+<title>Keyring — guia de comandos</title>
+<style>
+  @page { size: A4; margin: 15mm 15mm 16mm 15mm; }
+  :root { --tinta: #14130f; --suave: #6b6a63; --linha: #e4e1d8; --papel: #faf8f3; --acento: #b4532a; --bloco: #f1eee6; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; font-size: 9.6pt; line-height: 1.42; color: var(--tinta); }
+  h1 { font-size: 24pt; line-height: 1.05; margin: 0 0 3pt; letter-spacing: -0.02em; }
+  .sub { color: var(--suave); margin: 0 0 12pt; }
+  h2 { font-size: 11.5pt; margin: 15pt 0 5pt; padding-top: 7pt; border-top: 1.5px solid var(--tinta); break-after: avoid; }
+  h2 span { color: var(--acento); margin-right: 5pt; }
+  p { margin: 3pt 0 5pt; }
+  .linha { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+  .cmd { margin: 0 0 5pt; break-inside: avoid; }
+  code, pre { font-family: "Cascadia Mono", Consolas, "Courier New", monospace; font-size: 8.6pt; }
+  pre { margin: 0; padding: 5pt 8pt; background: var(--bloco); border-left: 3px solid var(--acento); border-radius: 3px; white-space: pre-wrap; word-break: break-word; }
+  .cmd p { margin: 2pt 0 0 3pt; color: var(--suave); font-size: 8.8pt; }
+  .nota { margin: 6pt 0; padding: 6pt 9pt; border: 1px solid var(--linha); background: var(--papel); border-radius: 4px; break-inside: avoid; }
+  .nota b { color: var(--acento); }
+  table { width: 100%; border-collapse: collapse; margin: 4pt 0 6pt; break-inside: avoid; }
+  th, td { text-align: left; vertical-align: top; padding: 3pt 6pt; border-bottom: 1px solid var(--linha); font-size: 9pt; }
+  th { color: var(--suave); font-weight: 600; font-size: 8.4pt; }
+  td:first-child { white-space: nowrap; }
+  footer { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid var(--linha); color: var(--suave); font-size: 8.2pt; }
+  .pagina2 { break-before: page; }
+</style>
+</head>
+<body>
+
+<h1>Keyring</h1>
+<p class="sub">Guia de comandos. Um cofre local para Windows com gavetas numeradas (1, 2, 3…), uma por empresa ou projecto, com valores, notas e ficheiros de qualquer tipo.</p>
+
+<div class="nota"><b>Regra de ouro:</b> tudo o que mexe em segredos começa por <code>keyring sudo</code>. Sem <code>sudo</code> só se vêem nomes e estados, nunca valores. A password do <code>sudo</code> é <code>1234</code> até a mudares com <code>keyring sudo passwd</code>. Uma gaveta pode ser dita pelo <b>número</b> (<code>1</code>) ou pelo <b>nome</b> (<code>acme</code>, sem maiúsculas nem acentos); nomes com espaços vão entre plicas: <code>'Acme Corp'</code>.</div>
+
+<h2><span>1</span>Sem password: ver o que existe</h2>
+<div class="linha">
+  <div class="cmd"><pre>keyring ls</pre><p>Lista todas as gavetas: número, nome, entidade, quantos itens e quantos a rodar.</p></div>
+  <div class="cmd"><pre>keyring</pre><p>O índice completo para uma IA: todas as gavetas, itens, estados e projectos. Nunca mostra valores.</p></div>
+  <div class="cmd"><pre>keyring --json</pre><p>O mesmo índice em JSON (para programas).</p></div>
+  <div class="cmd"><pre>keyring ajuda-ia</pre><p>O guia e as regras para uma IA.</p></div>
+</div>
+
+<h2><span>2</span>Entrar (sudo)</h2>
+<div class="linha">
+  <div class="cmd"><pre>keyring sudo</pre><p>Pede a password (1234 por omissão) e abre a sessão por 15 minutos, para todo o PC. Dentro dela não volta a pedir.</p></div>
+  <div class="cmd"><pre>keyring sudo --minutos 60</pre><p>Abre a sessão por 60 minutos (de 1 a 1440).</p></div>
+  <div class="cmd"><pre>keyring sudo -k</pre><p>Fecha a sessão já.</p></div>
+  <div class="cmd"><pre>keyring sudo passwd</pre><p>Muda a password (pede a antiga e a nova duas vezes).</p></div>
+</div>
+<p>Cinco passwords erradas seguidas bloqueiam 5 minutos. Num script: <code>echo 1234 | keyring sudo</code>.</p>
+
+<h2><span>3</span>Ver uma gaveta</h2>
+<div class="cmd"><pre>keyring sudo acme ls</pre><p>Lista tudo o que há na gaveta em texto simples: ficha, itens, tipo, estado, variável, nota. Os valores aparecem se estiveres num terminal; senão vêm como <code>***(comprimento)</code>. Para os veres sempre: <code>--mostrar</code>.</p></div>
+
+<h2><span>4</span>Imprimir uma gaveta (rec)</h2>
+<div class="cmd"><pre>keyring sudo acme rec txt &gt; C:\pasta\acme.txt
+keyring sudo acme rec pdf C:\pasta\acme.pdf</pre><p>A gaveta inteira, valores incluídos, em texto ou em PDF. Sem <code>txt</code> nem <code>pdf</code>, faz PDF.</p></div>
+<div class="cmd"><pre>keyring sudo 'acme' 'globex' rec pdf C:\pasta</pre><p>Vários PDFs de uma vez: um ficheiro por gaveta, dentro da pasta (<code>acme.pdf</code>, <code>globex.pdf</code>).</p></div>
+<div class="nota"><b>Atenção:</b> o <code>&gt;</code> é do terminal. Funciona em <code>cmd</code> e Git Bash; no PowerShell 5.1 estraga PDFs, por isso aí escreve o caminho no fim em vez do <code>&gt;</code>. Os ficheiros do <code>rec</code> têm <b>os segredos em texto simples</b>: apaga-os quando acabares.</div>
+
+<h2 class="pagina2"><span>5</span>Criar e guardar</h2>
+<div class="cmd"><pre>keyring sudo criar 'Acme Corp' --entidade AC</pre><p>Cria uma gaveta (recebe o próximo número). Opções: <code>--ficha-de ficheiro.md</code> (o texto da ficha) e <code>--numero N</code>.</p></div>
+<div class="cmd"><pre>keyring sudo acme pôr cloudflare.token --env CLOUDFLARE_API_TOKEN --descricao "conta de teste"</pre><p>Guarda um valor: pede-o sem aparecer no ecrã. Nomes de item: minúsculas, números, ponto e sublinhado. <code>--env</code> é o nome da variável que o <code>correr</code> cria.</p></div>
+<div class="cmd"><pre>keyring sudo acme pôr chave.pem C:\chaves\servidor --env SSH_SERVIDOR</pre><p>Guarda um ficheiro de qualquer tipo (PDF, chave, imagem, .env…).</p></div>
+<div class="cmd"><pre>keyring sudo acme pôr como.fazer notas.md --tipo nota
+printf %s 'valor' | keyring sudo acme pôr x --stdin</pre><p>Uma nota (texto). Com <code>--stdin</code> o valor vem da entrada (a sessão sudo tem de estar aberta antes).</p></div>
+<div class="cmd"><pre>keyring sudo acme ficha --de ficha.md
+keyring sudo acme ficha</pre><p>Define e mostra a ficha da gaveta (o que é o projecto, onde corre). A ficha e as notas não são secretas.</p></div>
+
+<h2><span>6</span>Mexer nos itens</h2>
+<table>
+  <tr><th>Comando</th><th>O que faz</th></tr>
+  <tr><td><code>keyring sudo acme estado cloudflare.token rodar</code></td><td>Marca o estado: <code>ok</code> (e a data de hoje), <code>rodar</code> ou <code>revogado</code>.</td></tr>
+  <tr><td><code>keyring sudo acme copiar cloudflare.token</code></td><td>Copia o valor; a área de transferência limpa-se em 30 s e fica fora do histórico do Windows.</td></tr>
+  <tr><td><code>keyring sudo acme abrir como.fazer</code></td><td>Abre a nota ou o ficheiro na aplicação do Windows, numa pasta temporária que se apaga sozinha.</td></tr>
+  <tr><td><code>keyring sudo acme tirar chave.pem C:\pasta</code></td><td>Extrai um ficheiro para uma pasta.</td></tr>
+  <tr><td><code>keyring sudo acme remover cloudflare.token</code></td><td>Apaga o item e as suas versões antigas.</td></tr>
+</table>
+<p>Cada item guarda a versão actual e as 5 anteriores: ao rodar um segredo, o antigo não se perde.</p>
+
+<h2><span>7</span>Usar os segredos sem os mostrar (correr)</h2>
+<div class="cmd"><pre>keyring sudo acme correr -- bash -c 'curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify'</pre><p>Corre o comando com os itens da gaveta que têm <code>--env</code> como variáveis de ambiente, só dentro dele. A saída vem censurada: qualquer segredo que apareça é trocado por <code>***</code>. É assim que um agente de IA (como o Claude Code) usa as credenciais sem as ver. Itens <code>revogado</code> não se injectam.</p></div>
+
+<h2><span>8</span>Projectos (itens de várias gavetas)</h2>
+<div class="cmd"><pre>keyring sudo projecto criar site --descricao "Website da Acme"
+keyring sudo projecto adicionar site 1/github.token 1/cloudflare.token 2/db.senha
+keyring sudo projecto site
+keyring sudo projecto site correr -- &lt;comando&gt;</pre><p>Um projecto é uma lista de itens, mesmo de gavetas diferentes. <code>correr</code> carrega tudo o que o projecto precisa de uma vez. Também: <code>keyring sudo correr --projecto site -- &lt;comando&gt;</code>.</p></div>
+
+<h2><span>9</span>Cópia de recuperação</h2>
+<div class="cmd"><pre>keyring sudo acme exportar D:\copias
+keyring sudo importar D:\copias\acme-20260101.keyring</pre><p>Um só ficheiro com a gaveta inteira (histórico incluído), cifrado com uma frase-passe tua (mínimo 8 caracteres). Serve para recuperar se o PC avariar. Guarda-o num disco externo, nunca num servidor. Se o número já estiver ocupado: <code>--numero N</code>.</p></div>
+
+<h2>Para lembrar</h2>
+<table>
+  <tr><th>Tema</th><th>Como é</th></tr>
+  <tr><td>Onde ficam os dados</td><td><code>C:\Users\&lt;utilizador&gt;\.keyring\</code> (só tua; fora do OneDrive e de repositórios). Só neste PC.</td></tr>
+  <tr><td>Variáveis de ambiente</td><td><code>KEYRING_DIR</code> (outra pasta de dados), <code>KEYRING_SENHA</code> (a password do sudo), <code>KEYRING_FRASE</code> (a frase-passe da recuperação).</td></tr>
+  <tr><td>Códigos de saída</td><td>0 = bem · 1 = erro explicado · 2 = erro inesperado. Com <code>--json</code> os erros vão em JSON para o stderr.</td></tr>
+  <tr><td>Limites</td><td>Valores com menos de 6 caracteres não são censurados no <code>correr</code>. A password 1234 só trava o uso casual: a tranca a sério é a do Windows.</td></tr>
+  <tr><td>Agentes de IA</td><td>Só funcionam neste PC, com a tua conta do Windows (um agente na nuvem ou num servidor não abre as gavetas).</td></tr>
+</table>
+
+<footer>Keyring v0.1 · guia de comandos · licença MIT · github.com/leonelferreira0373/keyring</footer>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Keyring — command guide</title>
+<style>
+  @page { size: A4; margin: 15mm 15mm 16mm 15mm; }
+  :root { --ink: #14130f; --soft: #6b6a63; --line: #e4e1d8; --paper: #faf8f3; --accent: #b4532a; --block: #f1eee6; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; font-size: 9.6pt; line-height: 1.42; color: var(--ink); }
+  h1 { font-size: 24pt; line-height: 1.05; margin: 0 0 3pt; letter-spacing: -0.02em; }
+  .sub { color: var(--soft); margin: 0 0 12pt; }
+  h2 { font-size: 11.5pt; margin: 15pt 0 5pt; padding-top: 7pt; border-top: 1.5px solid var(--ink); break-after: avoid; }
+  h2 span { color: var(--accent); margin-right: 5pt; }
+  p { margin: 3pt 0 5pt; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; }
+  .cmd { margin: 0 0 5pt; break-inside: avoid; }
+  code, pre { font-family: "Cascadia Mono", Consolas, "Courier New", monospace; font-size: 8.6pt; }
+  pre { margin: 0; padding: 5pt 8pt; background: var(--block); border-left: 3px solid var(--accent); border-radius: 3px; white-space: pre-wrap; word-break: break-word; }
+  .cmd p { margin: 2pt 0 0 3pt; color: var(--soft); font-size: 8.8pt; }
+  .note { margin: 6pt 0; padding: 6pt 9pt; border: 1px solid var(--line); background: var(--paper); border-radius: 4px; break-inside: avoid; }
+  .note b { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 4pt 0 6pt; break-inside: avoid; }
+  th, td { text-align: left; vertical-align: top; padding: 3pt 6pt; border-bottom: 1px solid var(--line); font-size: 9pt; }
+  th { color: var(--soft); font-weight: 600; font-size: 8.4pt; }
+  td:first-child { white-space: nowrap; }
+  footer { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid var(--line); color: var(--soft); font-size: 8.2pt; }
+  .page2 { break-before: page; }
+</style>
+</head>
+<body>
+
+<h1>Keyring</h1>
+<p class="sub">Command guide. A local vault for Windows with numbered drawers (1, 2, 3…), one per company or project, holding values, notes and files of any kind. The command names are Portuguese; this guide explains each one.</p>
+
+<div class="note"><b>Golden rule:</b> everything that touches secrets starts with <code>keyring sudo</code>. Without <code>sudo</code> you only see names and states, never values. The <code>sudo</code> password is <code>1234</code> until you change it with <code>keyring sudo passwd</code>. A drawer can be named by <b>number</b> (<code>1</code>) or by <b>name</b> (<code>acme</code>, case and accents ignored); names with spaces go in quotes: <code>'Acme Corp'</code>.</div>
+
+<h2><span>1</span>No password: see what exists</h2>
+<div class="row">
+  <div class="cmd"><pre>keyring ls</pre><p>Lists every drawer: number, name, entity, how many items and how many are due for rotation.</p></div>
+  <div class="cmd"><pre>keyring</pre><p>The full index for an AI: every drawer, item, state and project. Never shows values.</p></div>
+  <div class="cmd"><pre>keyring --json</pre><p>The same index as JSON (for programs).</p></div>
+  <div class="cmd"><pre>keyring ajuda-ia</pre><p>The guide and rules for an AI agent ("ajuda-ia" = AI help).</p></div>
+</div>
+
+<h2><span>2</span>Sign in (sudo)</h2>
+<div class="row">
+  <div class="cmd"><pre>keyring sudo</pre><p>Asks for the password (1234 by default) and opens a session for 15 minutes, for the whole PC. Inside it, no more prompts.</p></div>
+  <div class="cmd"><pre>keyring sudo --minutos 60</pre><p>Opens the session for 60 minutes (1 to 1440).</p></div>
+  <div class="cmd"><pre>keyring sudo -k</pre><p>Closes the session now.</p></div>
+  <div class="cmd"><pre>keyring sudo passwd</pre><p>Changes the password (asks for the old one and the new one twice).</p></div>
+</div>
+<p>Five wrong passwords in a row lock it for 5 minutes. In a script: <code>echo 1234 | keyring sudo</code>.</p>
+
+<h2><span>3</span>Look inside a drawer</h2>
+<div class="cmd"><pre>keyring sudo acme ls</pre><p>Lists everything in the drawer as plain text: description, items, type, state, variable, note. Values are shown when you are in a terminal; otherwise they appear as <code>***(length)</code>. To always see them: <code>--mostrar</code>.</p></div>
+
+<h2><span>4</span>Print a drawer (rec)</h2>
+<div class="cmd"><pre>keyring sudo acme rec txt &gt; C:\folder\acme.txt
+keyring sudo acme rec pdf C:\folder\acme.pdf</pre><p>The whole drawer, values included, as text or PDF. Without <code>txt</code> or <code>pdf</code> it makes a PDF.</p></div>
+<div class="cmd"><pre>keyring sudo 'acme' 'globex' rec pdf C:\folder</pre><p>Several PDFs at once: one file per drawer, inside the folder (<code>acme.pdf</code>, <code>globex.pdf</code>).</p></div>
+<div class="note"><b>Careful:</b> the <code>&gt;</code> belongs to the terminal. It works in <code>cmd</code> and Git Bash; in PowerShell 5.1 it corrupts PDFs, so there write the path at the end instead of using <code>&gt;</code>. The files from <code>rec</code> contain <b>secrets in plain text</b>: delete them when you are done.</div>
+
+<h2 class="page2"><span>5</span>Create and store</h2>
+<div class="cmd"><pre>keyring sudo criar 'Acme Corp' --entidade AC</pre><p>Creates a drawer (gets the next number). Options: <code>--ficha-de file.md</code> (the description text) and <code>--numero N</code>.</p></div>
+<div class="cmd"><pre>keyring sudo acme pôr cloudflare.token --env CLOUDFLARE_API_TOKEN --descricao "test account"</pre><p>Stores a value: asked for without echo. Item names: lowercase, digits, dot and underscore. <code>--env</code> is the variable name that <code>correr</code> creates.</p></div>
+<div class="cmd"><pre>keyring sudo acme pôr key.pem C:\keys\server --env SSH_SERVER</pre><p>Stores a file of any kind (PDF, key, image, .env…).</p></div>
+<div class="cmd"><pre>keyring sudo acme pôr how.to notes.md --tipo nota
+printf %s 'value' | keyring sudo acme pôr x --stdin</pre><p>A note (text). With <code>--stdin</code> the value comes from the input (the sudo session must be open first).</p></div>
+<div class="cmd"><pre>keyring sudo acme ficha --de ficha.md
+keyring sudo acme ficha</pre><p>Sets and shows the drawer's description (the "ficha": what the project is, where it runs). The description and notes are not secret.</p></div>
+
+<h2><span>6</span>Work with items</h2>
+<table>
+  <tr><th>Command</th><th>What it does</th></tr>
+  <tr><td><code>keyring sudo acme estado cloudflare.token rodar</code></td><td>Sets the state: <code>ok</code> (with today's date), <code>rodar</code> (rotate) or <code>revogado</code> (revoked).</td></tr>
+  <tr><td><code>keyring sudo acme copiar cloudflare.token</code></td><td>Copies the value; the clipboard is cleared after 30 s and kept out of Windows clipboard history.</td></tr>
+  <tr><td><code>keyring sudo acme abrir how.to</code></td><td>Opens the note or file in the Windows app, in a temp folder that deletes itself.</td></tr>
+  <tr><td><code>keyring sudo acme tirar key.pem C:\folder</code></td><td>Extracts a file to a folder.</td></tr>
+  <tr><td><code>keyring sudo acme remover cloudflare.token</code></td><td>Deletes the item and its old versions.</td></tr>
+</table>
+<p>Each item keeps the current version and the 5 previous ones: when you rotate a secret, the old one is not lost.</p>
+
+<h2><span>7</span>Use secrets without showing them (correr)</h2>
+<div class="cmd"><pre>keyring sudo acme correr -- bash -c 'curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify'</pre><p>Runs the command with the drawer's items that have <code>--env</code> as environment variables, only inside it. The output is redacted: any secret that shows up is replaced by <code>***</code>. This is how an AI agent (such as Claude Code) uses credentials without seeing them. Items marked <code>revogado</code> are never injected.</p></div>
+
+<h2><span>8</span>Projects (items from several drawers)</h2>
+<div class="cmd"><pre>keyring sudo projecto criar site --descricao "Acme website"
+keyring sudo projecto adicionar site 1/github.token 1/cloudflare.token 2/db.senha
+keyring sudo projecto site
+keyring sudo projecto site correr -- &lt;command&gt;</pre><p>A project is a list of items, even from different drawers. <code>correr</code> loads everything the project needs at once. Also: <code>keyring sudo correr --projecto site -- &lt;command&gt;</code>.</p></div>
+
+<h2><span>9</span>Recovery backup</h2>
+<div class="cmd"><pre>keyring sudo acme exportar D:\backups
+keyring sudo importar D:\backups\acme-20260101.keyring</pre><p>A single file with the whole drawer (history included), encrypted with a passphrase of your own (8 characters minimum). It lets you recover if the PC dies. Keep it on an external disk, never on a server. If the number is already taken: <code>--numero N</code>.</p></div>
+
+<h2>Worth remembering</h2>
+<table>
+  <tr><th>Topic</th><th>How it works</th></tr>
+  <tr><td>Where the data lives</td><td><code>C:\Users\&lt;user&gt;\.keyring\</code> (yours only; keep it out of OneDrive and repositories). This PC only.</td></tr>
+  <tr><td>Environment variables</td><td><code>KEYRING_DIR</code> (another data folder), <code>KEYRING_SENHA</code> (the sudo password), <code>KEYRING_FRASE</code> (the backup passphrase).</td></tr>
+  <tr><td>Exit codes</td><td>0 = ok · 1 = explained error · 2 = unexpected error. With <code>--json</code> errors go to stderr as JSON.</td></tr>
+  <tr><td>Limits</td><td>Values shorter than 6 characters are not redacted by <code>correr</code>. The 1234 password only stops casual use: the real lock is your Windows account.</td></tr>
+  <tr><td>AI agents</td><td>They only work on this PC, under your Windows account (an agent in the cloud or on a server cannot open the drawers).</td></tr>
+</table>
+
+<footer>Keyring v0.1 · command guide · MIT license · github.com/leonelferreira0373/keyring</footer>
+
+</body>
+</html>
